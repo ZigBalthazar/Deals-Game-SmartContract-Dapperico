@@ -22,12 +22,13 @@ contract DealsGame is Ownable, Pausable, Timer {
         uint256[5] Winner_Precentage;
         Status _Status;
         Payment_Methods _Payment_Methods;
-        address[] Wallets;
+        address[] Wallets;//111111111111
     }
 
     mapping(uint256 => Lottery) public Lotteries;
-    mapping(uint256 => mapping(address => uint256[])) Tickets;
-    mapping(uint256 => uint256) Ticket_Amounts;
+    mapping(uint256 => mapping(address => uint256[])) Tickets;//1111111111111
+    mapping(uint256 => uint256) Ticket_Amounts; 
+    uint256[] _b;
 
     enum Payment_Methods {
         Ethereum,
@@ -86,6 +87,28 @@ contract DealsGame is Ownable, Pausable, Timer {
             }
         }
         require(Lotteries[_Lottery_Id]._Status == Status.Open, "");
+        //check numers length
+        for (uint256 index = 0; index < _Tickets_Codes.length; index++) {
+            Tickets[_Lottery_Id][msg.sender].push(_Tickets_Codes[index]);
+        }
+    }
 
+    function Lottery_Status_Changer(uint256 _Lottery_Id,Status _S) public onlyOwner {
+        Lotteries[_Lottery_Id]._Status = _S;
+    }
+
+    function Seperate(uint256 _a) internal returns(uint256[] memory) {
+        delete _b;
+        _b.push(_a/100000);
+        _b.push((_a/10000)%10);
+        _b.push((_a/1000)%10);
+        _b.push((_a/100)%10);
+        _b.push((_a/10)%10);
+        _b.push(_a%10);
+        return _b;
+    }
+    
+    function Winners(uint256 _code,uint256 _Lottery_Id) public {
+        
     }
 }
