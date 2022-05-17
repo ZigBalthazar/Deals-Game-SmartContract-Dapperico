@@ -42,6 +42,11 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
     //EVENT Add Lottery
     event New_Lottery(Lottery _Lottery);
 
+    modifier callerIsUser() {
+        require(tx.origin == msg.sender, "");
+        _;
+    }
+
     function Add_Lotttery(
         uint256 _Price,
         uint256 _Max_Ticket_Per_Wallet,
@@ -61,7 +66,6 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
             _Players,
             _win
         );
-        // Ticket_Amounts[_ID.current()] = 0;
         emit New_Lottery(Lotteries[_ID.current()]);
         _ID.increment();
     }
@@ -70,6 +74,7 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
     function Buy_Ticket(uint256 _Lottery_Id, uint256[] memory _Tickets_Codes)
         public
         payable
+        callerIsUser
     {
         require(_Lottery_Id <= _ID.current(), "Lottery code not defined");
 
@@ -165,10 +170,11 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
         string memory _message,
         bytes memory _sig,
         uint256 _Lottery_Id
-    ) public {
+    ) public callerIsUser {
         require(verify(Validator_Address, _message, _sig), "invalid request");
         require(st2num(_message) <= Amount_Collected[_Lottery_Id], "");
         payable(msg.sender).transfer(st2num(_message));
+        delete Tickets[_Lottery_Id][msg.sender];
     }
 
     function st2num(string memory numString) public pure returns (uint256) {
