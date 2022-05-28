@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./RandomNumber.sol";
 import "./verify.sol";
+import "./Interface.sol";
 
 contract DealsGame is Ownable, Pausable, Random, Verify {
     using Counters for Counters.Counter;
@@ -70,15 +71,12 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
         _ID.increment();
     }
 
-    //payment
-    function Buy_Ticket(uint256 _Lottery_Id, uint256[] memory _Tickets_Codes)
-        public
-        payable
-        callerIsUser
-    {
+    function Buy_Ticket(
+        uint256 _Lottery_Id,
+        uint256[] memory _Tickets_Codes,
+        Payment_Methods _PM
+    ) public payable callerIsUser {
         require(_Lottery_Id <= _ID.current(), "Lottery code not defined");
-
-        //check_payment_status
 
         require(
             Tickets[_Lottery_Id][msg.sender].length + _Tickets_Codes.length <
@@ -99,6 +97,24 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
             Lotteries[_Lottery_Id]._Status == Status.Open,
             "The lottery is not open"
         );
+
+        if (_PM == Payment_Methods.BNB) {
+            require(
+                msg.value ==
+                    Lotteries[_Lottery_Id].Price.mul(_Tickets_Codes.length)
+            );
+        } else if (_PM == Payment_Methods.BUSD) {
+            
+            require(
+                EIP20Interface(0x0DA0F82A2C647735EcE2AE7208E1991d0040f761)
+                    .transferFrom(tx.origin,
+                        address(this),
+                        Lotteries[_Lottery_Id].Price.mul(_Tickets_Codes.length)
+                    )
+            );
+        } else {
+            revert();
+        }
 
         if (Tickets[_Lottery_Id][msg.sender].length == 0) {
             Lotteries[_Lottery_Id].Wallets.push(msg.sender);
@@ -169,11 +185,19 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
     function Claim_Reward(
         string memory _message,
         bytes memory _sig,
-        uint256 _Lottery_Id
+        uint256 _Lottery_Id,
+        Payment_Methods _PM
     ) public callerIsUser {
+        
         require(verify(Validator_Address, _message, _sig), "invalid request");
         require(st2num(_message) <= Amount_Collected[_Lottery_Id], "");
+
+if(_PM == Payment_Methods.BNB){
         payable(msg.sender).transfer(st2num(_message));
+}
+else if(_PM == Payment_Methods.BUSD){
+    EIP20Interface(0x0DA0F82A2C647735EcE2AE7208E1991d0040f761).transfer(msg.sender,st2num(_message));
+}
         delete Tickets[_Lottery_Id][msg.sender];
     }
 
@@ -191,3 +215,4 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
         return val;
     }
 }
+

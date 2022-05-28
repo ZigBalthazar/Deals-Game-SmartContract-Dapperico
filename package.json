@@ -3,6 +3,7 @@
   "dependencies": {
     "@chainlink/contracts": "^0.4.1",
     "@openzeppelin/contracts": "^4.6.0",
-    "@remix-project/remixd": "^0.6.1"
+    "@remix-project/remixd": "^0.6.1",
+    "ethers": "^5.6.6"
   }
 }
