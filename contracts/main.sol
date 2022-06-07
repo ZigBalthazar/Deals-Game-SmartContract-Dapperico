@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.13;
+pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -27,7 +27,7 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
     mapping(uint256 => Lottery) public Lotteries;
     mapping(uint256 => mapping(address => uint256[])) Tickets;
     mapping(uint256 => uint256[]) Sold_Tickets;
-    mapping(uint256 => uint256) Amount_Collected;
+    mapping(uint256 => uint256) public Amount_Collected;
     address Validator_Address;
     enum Payment_Methods {
         BNB,
@@ -104,14 +104,15 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
                     Lotteries[_Lottery_Id].Price.mul(_Tickets_Codes.length)
             );
         } else if (_PM == Payment_Methods.BUSD) {
-            
             require(
                 EIP20Interface(0x0DA0F82A2C647735EcE2AE7208E1991d0040f761)
-                    .transferFrom(tx.origin,
+                    .transferFrom(
+                        tx.origin,
                         address(this),
                         Lotteries[_Lottery_Id].Price.mul(_Tickets_Codes.length)
                     )
             );
+            Amount_Collected[_Lottery_Id] +=Lotteries[_Lottery_Id].Price.mul(_Tickets_Codes.length); 
         } else {
             revert();
         }
@@ -126,7 +127,7 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
             );
             Tickets[_Lottery_Id][msg.sender].push(_Tickets_Codes[index]);
             Sold_Tickets[_Lottery_Id].push(_Tickets_Codes[index]);
-            Amount_Collected[_Lottery_Id] += msg.value; ////////////
+            
         }
     }
 
@@ -182,22 +183,31 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
         return Sold_Tickets[_Lottery_Id];
     }
 
+    function Get_Wallets(uint256 _Lottery_Id)
+        public
+        view
+        returns (address[] memory)
+    {
+        return Lotteries[_Lottery_Id].Wallets;
+    }
+
     function Claim_Reward(
         string memory _message,
         bytes memory _sig,
         uint256 _Lottery_Id,
         Payment_Methods _PM
     ) public callerIsUser {
-        
         require(verify(Validator_Address, _message, _sig), "invalid request");
         require(st2num(_message) <= Amount_Collected[_Lottery_Id], "");
 
-if(_PM == Payment_Methods.BNB){
-        payable(msg.sender).transfer(st2num(_message));
-}
-else if(_PM == Payment_Methods.BUSD){
-    EIP20Interface(0x0DA0F82A2C647735EcE2AE7208E1991d0040f761).transfer(msg.sender,st2num(_message));
-}
+        if (_PM == Payment_Methods.BNB) {
+            payable(msg.sender).transfer(st2num(_message));
+        } else if (_PM == Payment_Methods.BUSD) {
+            EIP20Interface(0x0DA0F82A2C647735EcE2AE7208E1991d0040f761).transfer(
+                    msg.sender,
+                    st2num(_message)
+                );
+        }
         delete Tickets[_Lottery_Id][msg.sender];
     }
 
@@ -215,4 +225,3 @@ else if(_PM == Payment_Methods.BUSD){
         return val;
     }
 }
-

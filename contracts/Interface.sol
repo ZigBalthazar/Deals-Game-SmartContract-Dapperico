@@ -1,4 +1,4 @@
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.4;
 
 interface EIP20Interface {
     function balanceOf(address _owner) external view returns (uint256 balance);

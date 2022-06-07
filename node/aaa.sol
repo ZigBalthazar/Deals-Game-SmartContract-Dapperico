@@ -1,6 +1,6 @@
 contract Verifier {
     // Returns the address that signed a given string message
-    function verifyString(string message, uint8 v, bytes32 r,
+    function verifyString(string memory message, uint8 v, bytes32 r,
                  bytes32 s) public pure returns (address signer) {
 
         // The message header; we will fill in the length next

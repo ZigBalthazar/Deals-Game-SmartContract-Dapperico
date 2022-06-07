@@ -17,7 +17,7 @@ const aaa=async() =>{
 
     console.log(sig.v);
     console.log(sig.r);
-    console.log(sig.s);
+    console.log(sig.s); 
 
 }
 aaa()
