@@ -103,6 +103,7 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
                 msg.value ==
                     Lotteries[_Lottery_Id].Price.mul(_Tickets_Codes.length)
             );
+            Amount_Collected[_Lottery_Id] += msg.value;
         } else if (_PM == Payment_Methods.BUSD) {
             require(
                 EIP20Interface(0x0DA0F82A2C647735EcE2AE7208E1991d0040f761)
@@ -189,6 +190,14 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
         returns (address[] memory)
     {
         return Lotteries[_Lottery_Id].Wallets;
+    }
+
+        function Get_WinCode(uint256 _Lottery_Id)
+        public
+        view
+        returns (address[] memory)
+    {
+        return Lotteries[_Lottery_Id].Win_Code;
     }
 
     function Claim_Reward(
