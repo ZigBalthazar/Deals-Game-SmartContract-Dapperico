@@ -10,7 +10,7 @@ import "./RandomNumber.sol";
 import "./verify.sol";
 import "./Interface.sol";
 
-contract DealsGame is Ownable, Pausable, Random, Verify {
+contract DealsGame is Ownable, Pausable, Random, Verifier {
     using Counters for Counters.Counter;
     using SafeMath for uint256;
     Counters.Counter private _ID;
@@ -106,7 +106,7 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
             Amount_Collected[_Lottery_Id] += msg.value;
         } else if (_PM == Payment_Methods.BUSD) {
             require(
-                EIP20Interface(0x0DA0F82A2C647735EcE2AE7208E1991d0040f761)
+                EIP20Interface(0xD92E713d051C37EbB2561803a3b5FBAbc4962431)
                     .transferFrom(
                         tx.origin,
                         address(this),
@@ -172,7 +172,6 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
         view
         returns (uint256[] memory)
     {
-        require(Lotteries[_Lottery_Id]._Status == Status.Closed, "");
         return Tickets[_Lottery_Id][_Address];
     }
 
@@ -195,7 +194,7 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
         function Get_WinCode(uint256 _Lottery_Id)
         public
         view
-        returns (address[] memory)
+        returns (uint256[] memory)
     {
         return Lotteries[_Lottery_Id].Win_Code;
     }
@@ -206,13 +205,13 @@ contract DealsGame is Ownable, Pausable, Random, Verify {
         uint256 _Lottery_Id,
         Payment_Methods _PM
     ) public callerIsUser {
-        require(verify(Validator_Address, _message, _sig), "invalid request");
+        require(verify(_message, _sig) == Validator_Address, "invalid request");
         require(st2num(_message) <= Amount_Collected[_Lottery_Id], "");
 
         if (_PM == Payment_Methods.BNB) {
             payable(msg.sender).transfer(st2num(_message));
         } else if (_PM == Payment_Methods.BUSD) {
-            EIP20Interface(0x0DA0F82A2C647735EcE2AE7208E1991d0040f761).transfer(
+            EIP20Interface(0xD92E713d051C37EbB2561803a3b5FBAbc4962431).transfer(
                     msg.sender,
                     st2num(_message)
                 );
