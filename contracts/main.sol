@@ -22,12 +22,13 @@ contract DealsGame is Ownable, Pausable, Random, Verifier {
         Status _Status;
         Payment_Methods _Payment_Methods;
         address[] Wallets;
-        uint256[] Win_Code;
+        uint256 Win_Code;
     }
     mapping(uint256 => Lottery) public Lotteries;
     mapping(uint256 => mapping(address => uint256[])) Tickets;
     mapping(uint256 => uint256[]) Sold_Tickets;
     mapping(uint256 => uint256) public Amount_Collected;
+    mapping(uint256 => mapping(address => uint256)) public paid;
     address Validator_Address;
     enum Payment_Methods {
         BNB,
@@ -54,8 +55,7 @@ contract DealsGame is Ownable, Pausable, Random, Verifier {
         uint256 _Start_Time,
         uint256 _End_Time,
         Payment_Methods _PM,
-        address[] memory _Players,
-        uint256[] memory _win
+        address[] memory _Players
     ) public onlyOwner {
         Lotteries[_ID.current()] = Lottery(
             _Price,
@@ -65,7 +65,7 @@ contract DealsGame is Ownable, Pausable, Random, Verifier {
             Status.NotStarted,
             _PM,
             _Players,
-            _win
+            0
         );
         emit New_Lottery(Lotteries[_ID.current()]);
         _ID.increment();
@@ -130,6 +130,10 @@ contract DealsGame is Ownable, Pausable, Random, Verifier {
             Sold_Tickets[_Lottery_Id].push(_Tickets_Codes[index]);
             
         }
+        if(paid[_Lottery_Id][msg.sender] == 0){
+            paid[_Lottery_Id][msg.sender] = 1;
+        }
+
     }
 
     function Lottery_Status_Changer(uint256 _Lottery_Id, Status _Status)
@@ -158,9 +162,8 @@ contract DealsGame is Ownable, Pausable, Random, Verifier {
             "Lottery Completed"
         );
         Lotteries[_Lottery_Id]._Status = Status.Completed;
-        for (uint256 index = 0; index < 6; index++) {
-            Lotteries[_Lottery_Id].Win_Code.push(uint256(getRandomNumber()));
-        }
+            getRandomNumber();
+            Lotteries[_Lottery_Id].Win_Code = uint256(randomResult);
     }
 
     function Set_Price(uint256 _Lottery_Id, uint256 _Price) public onlyOwner {
@@ -194,7 +197,7 @@ contract DealsGame is Ownable, Pausable, Random, Verifier {
         function Get_WinCode(uint256 _Lottery_Id)
         public
         view
-        returns (uint256[] memory)
+        returns (uint256)
     {
         return Lotteries[_Lottery_Id].Win_Code;
     }
@@ -207,6 +210,7 @@ contract DealsGame is Ownable, Pausable, Random, Verifier {
     ) public callerIsUser {
         require(verify(_message, _sig) == Validator_Address, "invalid request");
         require(st2num(_message) <= Amount_Collected[_Lottery_Id], "");
+        require(paid[_Lottery_Id][msg.sender] == 1, "invalid claim");
 
         if (_PM == Payment_Methods.BNB) {
             payable(msg.sender).transfer(st2num(_message));
@@ -216,7 +220,11 @@ contract DealsGame is Ownable, Pausable, Random, Verifier {
                     st2num(_message)
                 );
         }
-        delete Tickets[_Lottery_Id][msg.sender];
+        paid[_Lottery_Id][msg.sender] = 2;
+    }
+
+        function Set_Validator_Address(address _Validator) public onlyOwner {
+        Validator_Address = _Validator;
     }
 
     function st2num(string memory numString) public pure returns (uint256) {
