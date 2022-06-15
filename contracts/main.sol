@@ -6,11 +6,10 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./RandomNumber.sol";
 import "./verify.sol";
 import "./Interface.sol";
 
-contract DealsGame is Ownable, Pausable, Random, Verifier {
+contract DealsGame is Ownable, Pausable, Verifier {
     using Counters for Counters.Counter;
     using SafeMath for uint256;
     Counters.Counter private _ID;
@@ -162,8 +161,7 @@ contract DealsGame is Ownable, Pausable, Random, Verifier {
             "Lottery Completed"
         );
         Lotteries[_Lottery_Id]._Status = Status.Completed;
-            getRandomNumber();
-            Lotteries[_Lottery_Id].Win_Code = uint256(randomResult);
+            Lotteries[_Lottery_Id].Win_Code = uint256(keccak256(abi.encode(block.timestamp, block.difficulty)))%1000000;
     }
 
     function Set_Price(uint256 _Lottery_Id, uint256 _Price) public onlyOwner {
