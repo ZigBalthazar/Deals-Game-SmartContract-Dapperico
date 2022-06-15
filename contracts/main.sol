@@ -161,7 +161,7 @@ contract DealsGame is Ownable, Pausable, Verifier {
             "Lottery Completed"
         );
         Lotteries[_Lottery_Id]._Status = Status.Completed;
-            Lotteries[_Lottery_Id].Win_Code = uint256(keccak256(abi.encode(block.timestamp, block.difficulty)))%1000000;
+            Lotteries[_Lottery_Id].Win_Code = uint256(keccak256(abi.encode(block.timestamp, block.difficulty,_ID.current())))%1000000;
     }
 
     function Set_Price(uint256 _Lottery_Id, uint256 _Price) public onlyOwner {
