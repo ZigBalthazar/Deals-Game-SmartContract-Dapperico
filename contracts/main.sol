@@ -218,7 +218,9 @@ contract DealsGame is Ownable, Pausable, Verifier {
                     st2num(_message)
                 );
         }
+        if(msg.sender !=owner()){
         paid[_Lottery_Id][msg.sender] = 2;
+        }
     }
 
         function Set_Validator_Address(address _Validator) public onlyOwner {
